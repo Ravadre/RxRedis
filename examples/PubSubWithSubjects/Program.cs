@@ -5,6 +5,7 @@ using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using RxRedis;
 using StackExchange.Redis;
@@ -25,6 +26,19 @@ namespace PubSubWithSubjects
             () =>
             {
                 Console.WriteLine("Done");
+            });
+
+
+            var obs = RedisObservable.Create<long>("s1", redis);
+            var d = obs.Subscribe(idx =>
+            {
+                Console.WriteLine("Obs " + idx);
+            });
+
+            Task.Run(() =>
+            {
+                Thread.Sleep(500);
+                d.Dispose();
             });
 
             Observable.Interval(TimeSpan.FromSeconds(0.2)).Subscribe(idx =>
