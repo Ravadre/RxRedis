@@ -5,6 +5,7 @@ using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Subjects;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
@@ -13,13 +14,16 @@ using Newtonsoft.Json.Linq;
 
 namespace RxRedis
 {
-    public class RedisSubject<T> : ISubject<T>
+    public class RedisSubject<T> : ISubject<T>, IDisposable
     {
         private readonly string redisChannel;
         private readonly IConnectionMultiplexer redisConnection;
         private readonly ISubscriber sub;
         private readonly JsonSerializerSettings jsonSerializerSettings;
         private readonly List<IObserver<T>> observers;
+        private readonly object gate;
+        private bool isStopped;
+        private bool isDisposed;
 
         public RedisSubject(string redisChannel, IConnectionMultiplexer redisConnection)
         {
@@ -27,6 +31,7 @@ namespace RxRedis
             this.redisConnection = redisConnection;
 
             observers = new List<IObserver<T>>();
+            gate = new object();
 
             sub = this.redisConnection.GetSubscriber();
 
@@ -43,7 +48,7 @@ namespace RxRedis
             var msg = JsonConvert.DeserializeObject<Message<T>>(redisValue);
 
             IObserver<T>[] obs;
-            lock (observers)
+            lock (gate)
             {
                 obs = observers.ToArray();
             }
@@ -54,7 +59,14 @@ namespace RxRedis
                 {
                     foreach (var o in obs)
                     {
-                        o.OnNext(msg.Value);
+                        try
+                        {
+                            o.OnNext(msg.Value);
+                        }
+                        catch
+                        {
+                            Unsubscribe(o);
+                        }
                     }
                     break;
                 }
@@ -63,7 +75,14 @@ namespace RxRedis
                 {
                     foreach (var o in obs)
                     {
-                        o.OnCompleted();
+                        try
+                        {
+                            o.OnCompleted();
+                        }
+                        catch
+                        {
+                            Unsubscribe(o);
+                        }
                     }
                     break;
                 }
@@ -72,7 +91,14 @@ namespace RxRedis
                 {
                     foreach (var o in obs)
                     {
-                        o.OnError(new Exception(msg.Value.ToString()));
+                        try
+                        {
+                            o.OnError(new Exception(msg.Value.ToString()));
+                        }
+                        catch
+                        {
+                            Unsubscribe(o);
+                        }
                     }
                     break;
                 }
@@ -81,39 +107,96 @@ namespace RxRedis
 
         public void OnNext(T value)
         {
-            sub.Publish(redisChannel,
-                JsonConvert.SerializeObject(
-                    new Message<T>(value, MessageType.Simple), jsonSerializerSettings));
+            lock (gate)
+            {
+                CheckDisposed();
+
+                if (!isStopped)
+                {
+                    sub.Publish(redisChannel,
+                        JsonConvert.SerializeObject(
+                            new Message<T>(value, null, MessageType.Simple), jsonSerializerSettings));
+                }
+            }
         }
 
         public void OnError(Exception error)
         {
-            sub.Publish(redisChannel,
-                JsonConvert.SerializeObject(
-                    new Message<string>(error.Message, MessageType.Error), jsonSerializerSettings));
+            lock (gate)
+            {
+                CheckDisposed();
+
+                if (!isStopped)
+                {
+                    isStopped = true;
+                    sub.Publish(redisChannel,
+                        JsonConvert.SerializeObject(
+                            new Message<T>(default(T), error.Message, MessageType.Error), jsonSerializerSettings));
+                }
+            }
         }
 
         public void OnCompleted()
         {
-            sub.Publish(redisChannel,
-                JsonConvert.SerializeObject(
-                    new Message<Unit>(Unit.Default, MessageType.Completed), jsonSerializerSettings));
+            lock (gate)
+            {
+                CheckDisposed();
+
+                if (!isStopped)
+                {
+                    isStopped = true;
+                    sub.Publish(redisChannel,
+                        JsonConvert.SerializeObject(
+                            new Message<T>(default(T), null, MessageType.Completed), jsonSerializerSettings));
+                }
+            }
+        }
+
+        private void Unsubscribe(IObserver<T> observer)
+        {
+            lock (gate)
+            {
+                observers.Remove(observer);
+            }
         }
 
         public IDisposable Subscribe(IObserver<T> observer)
         {
-            lock (observers)
+            if (observer == null)
+                throw new ArgumentNullException(nameof(observer));
+
+            lock (gate)
             {
-                observers.Add(observer);
+                CheckDisposed();
+
+                if (!isStopped)
+                {
+                    observers.Add(observer);
+                }
             }
 
             return Disposable.Create(() =>
             {
-                lock (observers)
+                lock (gate)
                 {
-                    observers.Remove(observer);
+                    Unsubscribe(observer);
                 }
             });
+        }
+
+        private void CheckDisposed()
+        {
+            if (isDisposed)
+                throw new ObjectDisposedException(string.Empty);
+        }
+
+        public void Dispose()
+        {
+            lock (gate)
+            {
+                isDisposed = true;
+                observers.Clear();
+            }
         }
     }
 }

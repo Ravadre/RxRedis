@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reactive.Concurrency;
 using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using System.Text;
 using System.Threading.Tasks;
 using RxRedis;
@@ -19,9 +21,24 @@ namespace PubSubWithSubjects
             sbj.Subscribe(x =>
             {
                 Console.WriteLine(x);
+            },
+            () =>
+            {
+                Console.WriteLine("Done");
             });
 
-            Observable.Interval(TimeSpan.FromSeconds(0.5)).Subscribe(idx => sbj.OnNext(idx));
+            Observable.Interval(TimeSpan.FromSeconds(0.2)).Subscribe(idx =>
+            {
+                if (idx < 5)
+                {
+                    sbj.OnNext(idx);
+                }
+                else
+                {
+                    sbj.OnCompleted();
+                }
+            });
+                
             Console.ReadLine();
         }
     }

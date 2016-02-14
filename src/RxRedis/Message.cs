@@ -10,11 +10,13 @@ namespace RxRedis
     {
         public T Value { get; }
         public MessageType MessageType { get; }
+        public string Error { get; }
 
-        public Message(T value, MessageType messageType)
+        public Message(T value, string error, MessageType messageType)
         {
             Value = value;
             MessageType = messageType;
+            Error = error;
         }
     }
 
