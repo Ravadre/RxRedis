@@ -7,6 +7,21 @@ NUGET
     Microsoft.Bcl.Async (1.0.168) - framework: net40
       Microsoft.Bcl (>= 1.1.8)
     Microsoft.Bcl.Build (1.0.21) - import_targets: false, framework: net40
+    Newtonsoft.Json (8.0.2)
+    Rx-Core (2.2.5)
+      Rx-Interfaces (>= 2.2.5)
+    Rx-Interfaces (2.2.5)
+    Rx-Linq (2.2.5)
+      Rx-Core (>= 2.2.5)
+      Rx-Interfaces (>= 2.2.5)
+    Rx-Main (2.2.5)
+      Rx-Core (>= 2.2.5)
+      Rx-Interfaces (>= 2.2.5)
+      Rx-Linq (>= 2.2.5)
+      Rx-PlatformServices (>= 2.2.5)
+    Rx-PlatformServices (2.2.5)
+      Rx-Core (>= 2.2.5)
+      Rx-Interfaces (>= 2.2.5)
     StackExchange.Redis (1.0.488)
       Microsoft.Bcl (>= 1.1.9) - framework: net40
       Microsoft.Bcl.Async (>= 1.0.168) - framework: net40
