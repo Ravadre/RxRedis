@@ -23,11 +23,14 @@ namespace PubSubWithSubjects
             {
                 Console.WriteLine(x);
             },
+            exn =>
+            {
+                Console.WriteLine(exn.Message);  
+            },
             () =>
             {
                 Console.WriteLine("Done");
             });
-
 
             var obs = RedisObservable.Create<long>("s1", redis);
             var d = obs.Subscribe(idx =>

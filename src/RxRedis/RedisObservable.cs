@@ -12,15 +12,15 @@ namespace RxRedis
 {
     public static class RedisObservable
     {
-        public static IObservable<T> Create<T>(string redisChannel, IConnectionMultiplexer redisConnection)
+        public static IObservable<T> Create<T>(string subjectName, IConnectionMultiplexer redisConnection)
         {
-            return new RedisObservable<T>(redisChannel, redisConnection);
+            return new RedisObservable<T>(subjectName, redisConnection);
         } 
     }
 
     public class RedisObservable<T> : IObservable<T>, IDisposable
     {
-        protected readonly string redisChannel;
+        protected readonly string subjectName;
         protected readonly IConnectionMultiplexer redisConnection;
         protected readonly ISubscriber sub;
         protected readonly JsonSerializerSettings jsonSerializerSettings;
@@ -29,9 +29,9 @@ namespace RxRedis
         protected bool isStopped;
         protected bool isDisposed;
 
-        internal RedisObservable(string redisChannel, IConnectionMultiplexer redisConnection)
+        internal RedisObservable(string subjectName, IConnectionMultiplexer redisConnection)
         {
-            this.redisChannel = redisChannel;
+            this.subjectName = subjectName;
             this.redisConnection = redisConnection;
 
             observers = new List<IObserver<T>>();
@@ -44,7 +44,7 @@ namespace RxRedis
                 ContractResolver = new CamelCasePropertyNamesContractResolver()
             };
 
-            sub.Subscribe(redisChannel, OnMessage);
+            sub.Subscribe(subjectName, OnMessage);
         }
 
         private void OnMessage(RedisChannel redisChannel, RedisValue redisValue)
@@ -74,7 +74,6 @@ namespace RxRedis
                         }
                         break;
                     }
-
                 case MessageType.Completed:
                     {
                         foreach (var o in obs)
@@ -90,14 +89,13 @@ namespace RxRedis
                         }
                         break;
                     }
-
                 case MessageType.Error:
                     {
                         foreach (var o in obs)
                         {
                             try
                             {
-                                o.OnError(new Exception(msg.Value.ToString()));
+                                o.OnError(new Exception(msg.Error));
                             }
                             catch
                             {
