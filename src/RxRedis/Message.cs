@@ -8,9 +8,11 @@ namespace RxRedis
 {
     public class Message<T>
     {
-        public T Value { get; }
-        public MessageType MessageType { get; }
-        public string Error { get; }
+        public T Value { get; set; }
+        public MessageType MessageType { get; set; }
+        public string Error { get; set; }
+
+        public Message() { }
 
         public Message(T value, string error, MessageType messageType)
         {

@@ -3,19 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
 VisualStudioVersion = 14.0.24720.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Paket", "Paket", "{A64D5076-55AB-4958-8DD7-4AE73AEF4C73}"
-	ProjectSection(SolutionItems) = preProject
-		paket.dependencies = paket.dependencies
-	EndProjectSection
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RxRedis", "src\RxRedis\RxRedis.csproj", "{14A4A82B-308D-4784-B09E-34B26A0887DD}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RxRedis.Tests", "tests\RxRedis.Tests\RxRedis.Tests.csproj", "{995B0573-DBA1-416E-8A7C-4332CAE127BC}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{3E1705F9-EF77-4939-BA25-2962243E5A2D}"
-	ProjectSection(SolutionItems) = preProject
-		build.fsx = build.fsx
-	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "examples", "examples", "{AC4161AA-701D-4075-A6F6-781FF5A5E492}"
 EndProject

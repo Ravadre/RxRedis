@@ -1,6 +1,0 @@
-type project
-licenseURL http://opensource.org/licenses/MIT
-
-description 
-    Reactive extensions over Redis.
-    

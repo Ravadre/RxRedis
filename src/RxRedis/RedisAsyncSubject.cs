@@ -4,7 +4,7 @@ using System.Linq;
 using System.Reactive.Subjects;
 using System.Text;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
+using Jil;
 using StackExchange.Redis;
 
 namespace RxRedis
@@ -25,10 +25,8 @@ namespace RxRedis
 
                 if (!isStopped)
                 {
-
-                    sub.Publish(subjectName,
-                        JsonConvert.SerializeObject(
-                            new Message<T>(value, null, MessageType.Simple), jsonSerializerSettings));
+                    var msg = JSON.Serialize(value);
+                    redisConnection.GetDatabase().StringSet("rxRedis:" + subjectName, msg);
                 }
             }
         }
@@ -43,8 +41,8 @@ namespace RxRedis
                 {
                     isStopped = true;
                     sub.Publish(subjectName,
-                        JsonConvert.SerializeObject(
-                            new Message<T>(default(T), error.Message, MessageType.Error), jsonSerializerSettings));
+                        JSON.Serialize(
+                            new Message<T>(default(T), error.Message, MessageType.Error)));
                 }
             }
         }
@@ -59,8 +57,8 @@ namespace RxRedis
                 {
                     isStopped = true;
                     sub.Publish(subjectName,
-                        JsonConvert.SerializeObject(
-                            new Message<T>(default(T), null, MessageType.Completed), jsonSerializerSettings));
+                        JSON.Serialize(
+                            new Message<T>(default(T), null, MessageType.Completed)));
                 }
             }
         }

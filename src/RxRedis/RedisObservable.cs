@@ -4,8 +4,7 @@ using System.Linq;
 using System.Reactive.Disposables;
 using System.Text;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
+using Jil;
 using StackExchange.Redis;
 
 namespace RxRedis
@@ -23,7 +22,6 @@ namespace RxRedis
         protected readonly string subjectName;
         protected readonly IConnectionMultiplexer redisConnection;
         protected readonly ISubscriber sub;
-        protected readonly JsonSerializerSettings jsonSerializerSettings;
         protected readonly List<IObserver<T>> observers;
         protected readonly object gate;
         protected bool isStopped;
@@ -39,17 +37,12 @@ namespace RxRedis
 
             sub = this.redisConnection.GetSubscriber();
 
-            jsonSerializerSettings = new JsonSerializerSettings
-            {
-                ContractResolver = new CamelCasePropertyNamesContractResolver()
-            };
-
             sub.Subscribe(subjectName, OnMessage);
         }
 
         private void OnMessage(RedisChannel redisChannel, RedisValue redisValue)
         {
-            var msg = JsonConvert.DeserializeObject<Message<T>>(redisValue);
+            var msg = JSON.Deserialize<Message<T>>(redisValue);
 
             IObserver<T>[] obs;
             lock (gate)
