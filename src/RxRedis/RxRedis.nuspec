@@ -8,7 +8,7 @@
     <licenseUrl>https://raw.githubusercontent.com/Ravadre/RxRedis/master/LICENSE</licenseUrl>
     <projectUrl>https://github.com/Ravadre/RxRedis</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
-    <description>Implementation of ReactiveX with Redis as a transform layer</description>
+    <description>Implementation of ReactiveX with Redis as a transport layer</description>
     <releaseNotes></releaseNotes>
     <copyright>Copyright $author$ 2016</copyright>
     <tags>Redis Reactive Extensions</tags>
