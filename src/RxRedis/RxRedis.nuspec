@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>RxRedis</id>
+    <version>$version$</version>
+    <authors>$author$</authors>
+    <owners>$author$</owners>
+    <licenseUrl>https://raw.githubusercontent.com/Ravadre/RxRedis/master/LICENSE</licenseUrl>
+    <projectUrl>https://github.com/Ravadre/RxRedis</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Implementation of ReactiveX with Redis as a transform layer</description>
+    <releaseNotes></releaseNotes>
+    <copyright>Copyright $author$ 2016</copyright>
+    <tags>Redis Reactive Extensions</tags>
+    <dependencies>     
+    </dependencies>
+  </metadata>
+</package>
