@@ -17,17 +17,7 @@ namespace PubSubWithSubjects
         static void Main(string[] args)
         {
             var redis = ConnectionMultiplexer.Connect("localhost");
-            //var sbj = new RedisAsyncSubject<long>("s1", redis);
-            //var sbj = new AsyncSubject<long>();
-            
             var sbj = new RedisSubject<long>("s1", redis);
-            //var sbj = new Subject<long>();
-
-            sbj.OnNext(5);
-            sbj.OnNext(6);
-            sbj.OnNext(7);
-
-            sbj.OnError(new Exception("test"));
 
             sbj.Subscribe(x =>
             {
@@ -35,17 +25,20 @@ namespace PubSubWithSubjects
             },
             exn =>
             {
-                Console.WriteLine(exn.Message);  
+                Console.WriteLine(exn.Message);
             },
             () =>
             {
                 Console.WriteLine("Done");
             });
 
+            sbj.OnNext(5);
+            sbj.OnNext(6);
+            sbj.OnNext(7);
+
             sbj.OnNext(8);
             sbj.OnNext(9);
-            Console.WriteLine("Before complete");
-            sbj.OnError(new Exception("test"));
+            sbj.OnCompleted();
 
             Console.ReadLine();
         }
