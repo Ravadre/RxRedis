@@ -17,7 +17,8 @@ namespace RxRedis
         public RedisSubject(string subjectName, IConnectionMultiplexer redisConnection)
             : base(subjectName, redisConnection)
         {
-           
+            db.KeyDelete(RedisKeyState);
+            db.KeyDelete(RedisKeyValue);
         }
         
         public void OnNext(T value)
@@ -30,7 +31,7 @@ namespace RxRedis
                 {
                     sub.Publish(subjectName,
                         JSON.Serialize(
-                            new Message<T>(value, null, MessageType.Simple)));
+                            new Message<T>(value, null, MessageType.Value)));
                 }
             }
         }
@@ -44,6 +45,10 @@ namespace RxRedis
                 if (!isStopped)
                 {
                     isStopped = true;
+
+                    db.StringSet(RedisKeyValue, error.Message);
+                    db.StringSet(RedisKeyState, (int)ValueState.Error);
+
                     sub.Publish(subjectName,
                         JSON.Serialize(
                             new Message<T>(default(T), error.Message, MessageType.Error)));
@@ -56,6 +61,8 @@ namespace RxRedis
             lock (gate)
             {
                 CheckDisposed();
+
+                db.StringSet(RedisKeyState, (int) ValueState.Completed);
 
                 if (!isStopped)
                 {

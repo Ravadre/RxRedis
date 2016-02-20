@@ -14,7 +14,8 @@ namespace RxRedis
         public RedisAsyncSubject(string subjectName, IConnectionMultiplexer redisConnection)
             : base(subjectName, redisConnection)
         {
-
+            db.KeyDelete(RedisKeyState);
+            db.KeyDelete(RedisKeyValue);
         }
 
         public void OnNext(T value)
@@ -26,7 +27,8 @@ namespace RxRedis
                 if (!isStopped)
                 {
                     var msg = JSON.Serialize(value);
-                    redisConnection.GetDatabase().StringSet("rxRedis:" + subjectName, msg);
+                    db.StringSet(RedisKeyValue, msg);
+                    db.StringSet(RedisKeyState, (int)ValueState.Unpublished);
                 }
             }
         }
@@ -40,6 +42,10 @@ namespace RxRedis
                 if (!isStopped)
                 {
                     isStopped = true;
+
+                    db.StringSet(RedisKeyValue, error.Message);
+                    db.StringSet(RedisKeyState, (int)ValueState.Error);
+                   
                     sub.Publish(subjectName,
                         JSON.Serialize(
                             new Message<T>(default(T), error.Message, MessageType.Error)));
@@ -55,6 +61,12 @@ namespace RxRedis
 
                 if (!isStopped)
                 {
+                    var state = RedisParseState();
+                    var newState = ValueState.Completed;
+                    if ((state & ValueState.Unpublished) > 0)
+                        newState |= ValueState.Published;
+                    db.StringSet(RedisKeyState, (int) newState);
+
                     isStopped = true;
                     sub.Publish(subjectName,
                         JSON.Serialize(

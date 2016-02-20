@@ -24,8 +24,17 @@ namespace RxRedis
 
     public enum MessageType
     {
-        Simple = 1,
+        Value = 1,
         Error = 2,
         Completed = 3
+    }
+
+    [Flags]
+    public enum ValueState
+    {
+        Unpublished = 0x1,
+        Published = 0x2,
+        Completed = 0x100,
+        Error = 0x200
     }
 }

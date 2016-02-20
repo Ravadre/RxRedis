@@ -21,16 +21,27 @@ namespace RxRedis
     {
         protected readonly string subjectName;
         protected readonly IConnectionMultiplexer redisConnection;
+        protected readonly IDatabase db;
         protected readonly ISubscriber sub;
         protected readonly List<IObserver<T>> observers;
         protected readonly object gate;
         protected bool isStopped;
         protected bool isDisposed;
 
+        protected string RedisKeyValue => "rxRedis:" + subjectName + ":value";
+        protected string RedisKeyState => "rxRedis:" + subjectName + ":state";
+
+        protected ValueState RedisParseState()
+        {
+            var v = db.StringGet(RedisKeyState);
+            return v.HasValue ? (ValueState)(int)v : 0;
+        }
+
         internal RedisObservable(string subjectName, IConnectionMultiplexer redisConnection)
         {
             this.subjectName = subjectName;
             this.redisConnection = redisConnection;
+            this.db = redisConnection.GetDatabase();
 
             observers = new List<IObserver<T>>();
             gate = new object();
@@ -52,7 +63,7 @@ namespace RxRedis
 
             switch (msg.MessageType)
             {
-                case MessageType.Simple:
+                case MessageType.Value:
                     {
                         foreach (var o in obs)
                         {
@@ -71,6 +82,7 @@ namespace RxRedis
                     {
                         foreach (var o in obs)
                         {
+                            EmitIfPublished(o);
                             try
                             {
                                 o.OnCompleted();
@@ -108,6 +120,67 @@ namespace RxRedis
             }
         }
 
+        private void EmitIfPublished(IObserver<T> o)
+        {
+            var state = RedisParseState();
+            if ((state & ValueState.Published) != 0)
+            {
+                var val = db.StringGet(RedisKeyValue);
+
+                if (val.HasValue)
+                {
+                    var msg = JSON.Deserialize<T>(val);
+                    try
+                    {
+                        o.OnNext(msg);
+                    }
+                    catch
+                    {
+                        Unsubscribe(o);
+                    }
+                }
+            }
+        }
+
+        private void EmitIfCompleted(IObserver<T> o)
+        {
+            var state = RedisParseState();
+            if ((state & ValueState.Completed) != 0)
+            {
+                try
+                {
+                    o.OnCompleted();
+                }
+                catch
+                {
+                    Unsubscribe(o);
+                }
+            }
+        }
+
+
+        private void EmitIfError(IObserver<T> o)
+        {
+            var state = RedisParseState();
+            if ((state & ValueState.Error) != 0)
+            {
+                var val = db.StringGet(RedisKeyValue);
+
+                if (val.HasValue)
+                {
+                    try
+                    {
+                        o.OnError(new Exception(val));
+                    }
+                    catch
+                    {
+                        Unsubscribe(o);
+                    }
+                }
+            }
+        }
+
+
         public IDisposable Subscribe(IObserver<T> observer)
         {
             if (observer == null)
@@ -116,6 +189,10 @@ namespace RxRedis
             lock (gate)
             {
                 CheckDisposed();
+
+                EmitIfPublished(observer);
+                EmitIfCompleted(observer);
+                EmitIfError(observer);
 
                 if (!isStopped)
                 {

@@ -72,6 +72,7 @@
   <ItemGroup>
     <Compile Include="Message.cs" />
     <Compile Include="RedisAsyncSubject.cs" />
+    <Compile Include="RedisKeys.cs" />
     <Compile Include="RedisObservable.cs" />
     <Compile Include="RedisSubject.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
