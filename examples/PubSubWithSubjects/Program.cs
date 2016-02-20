@@ -19,7 +19,9 @@ namespace PubSubWithSubjects
             var redis = ConnectionMultiplexer.Connect("localhost");
             var sbj = new RedisSubject<long>("s1", redis);
 
-            sbj.Subscribe(x =>
+            var obs = RedisObservable.Create<long>("s1", redis);
+
+            obs.Subscribe(x =>
             {
                 Console.WriteLine(x);
             },
