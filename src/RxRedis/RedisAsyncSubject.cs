@@ -61,13 +61,14 @@ namespace RxRedis
 
                 if (!isStopped)
                 {
+                    isStopped = true;
+
                     var state = RedisParseState();
                     var newState = ValueState.Completed;
                     if ((state & ValueState.Unpublished) > 0)
                         newState |= ValueState.Published;
                     db.StringSet(RedisKeyState, (int) newState);
 
-                    isStopped = true;
                     sub.Publish(subjectName,
                         JSON.Serialize(
                             new Message<T>(default(T), null, MessageType.Completed)));

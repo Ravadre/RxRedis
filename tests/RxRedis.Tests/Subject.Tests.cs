@@ -9,8 +9,8 @@ namespace RxRedis.Tests
 {
     public class RedisSubjectTests
     {
-        private RedisSubject<Data> redisRx;
-        private Subject<Data> rx;
+        private readonly RedisSubject<Data> redisRx;
+        private readonly Subject<Data> rx;
 
         public RedisSubjectTests()
         {
@@ -86,7 +86,94 @@ namespace RxRedis.Tests
             Subcribe(redisRx, redisResult);
 
             OnCompleted();
-            Thread.Sleep(100);
+
+            AssertBuilders(rxResult, redisResult);
+        }
+
+        [Fact]
+        public void All_values_should_be_received()
+        {
+            var rxResult = new StringBuilder();
+            var redisResult = new StringBuilder();
+
+            Subcribe(rx, rxResult);
+            Subcribe(redisRx, redisResult);
+
+            OnNext(new Data("foo", 5));
+            OnNext(new Data("foo 2", 57));
+            OnNext(new Data("foo 3", 88885));
+
+            AssertBuilders(rxResult, redisResult);
+        }
+
+        [Fact]
+        public void All_values_before_completed_should_be_received()
+        {
+            var rxResult = new StringBuilder();
+            var redisResult = new StringBuilder();
+
+            Subcribe(rx, rxResult);
+            Subcribe(redisRx, redisResult);
+
+            OnNext(new Data("foo", 5));
+            OnNext(new Data("foo 2", 57));
+            OnCompleted();
+            OnNext(new Data("foo 3", 88885));
+
+            AssertBuilders(rxResult, redisResult);
+        }
+
+        [Fact]
+        public void All_values_before_error_should_be_received()
+        {
+            var rxResult = new StringBuilder();
+            var redisResult = new StringBuilder();
+
+            Subcribe(rx, rxResult);
+            Subcribe(redisRx, redisResult);
+
+            OnNext(new Data("foo", 5));
+            OnNext(new Data("foo 2", 57));
+            OnError(new Exception("test exn"));
+            OnNext(new Data("foo 3", 88885));
+
+            AssertBuilders(rxResult, redisResult);
+        }
+
+        [Fact]
+        public void All_methods_after_first_OnError_should_be_ignored()
+        {
+            var rxResult = new StringBuilder();
+            var redisResult = new StringBuilder();
+
+            Subcribe(rx, rxResult);
+            Subcribe(redisRx, redisResult);
+
+            OnNext(new Data("foo", 5));
+            OnNext(new Data("foo 2", 57));
+            OnError(new Exception("test exn"));
+            OnError(new Exception("test exn"));
+            OnCompleted();
+            OnCompleted();
+            OnCompleted();
+
+            AssertBuilders(rxResult, redisResult);
+        }
+
+        [Fact]
+        public void Subscribing_to_faulted_subject_should_propagate_error()
+        {
+            var rxResult = new StringBuilder();
+            var redisResult = new StringBuilder();
+
+            OnError(new Exception("test exn"));
+            OnError(new Exception("test exn"));
+            OnCompleted();
+            OnCompleted();
+            OnCompleted();
+
+            Subcribe(rx, rxResult);
+            Subcribe(redisRx, redisResult);
 
             AssertBuilders(rxResult, redisResult);
         }
@@ -96,5 +183,16 @@ namespace RxRedis.Tests
     {
         public string Foo { get; set; }
         public long Bar { get; set; }
+
+        public Data()
+        {
+            
+        }
+
+        public Data(string foo, long bar)
+        {
+            Foo = foo;
+            Bar = bar;
+        }
     }
 }

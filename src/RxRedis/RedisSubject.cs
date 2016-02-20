@@ -62,11 +62,12 @@ namespace RxRedis
             {
                 CheckDisposed();
 
-                db.StringSet(RedisKeyState, (int) ValueState.Completed);
-
                 if (!isStopped)
                 {
                     isStopped = true;
+
+                    db.StringSet(RedisKeyState, (int)ValueState.Completed);
+
                     sub.Publish(subjectName,
                         JSON.Serialize(
                             new Message<T>(default(T), null, MessageType.Completed)));
