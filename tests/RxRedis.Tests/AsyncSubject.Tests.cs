@@ -10,61 +10,14 @@ using Xunit;
 
 namespace RxRedis.Tests
 {
-    public class RedisAsyncSubjectTests
+    public class RedisAsyncSubjectTests : SubjectTestsCommons
     {
-        private readonly RedisAsyncSubject<Data> redisRx;
-        private readonly AsyncSubject<Data> rx;
-
         public RedisAsyncSubjectTests()
         {
             rx = new AsyncSubject<Data>();
-            redisRx = new RedisAsyncSubject<Data>("redis-subject-tests", ConnectionMultiplexer.Connect("localhost"));
+            redisRx = new RedisAsyncSubject<Data>("redis-async-subject-tests", ConnectionMultiplexer.Connect("localhost"));
         }
-
-        private IDisposable Subcribe(ISubject<Data> subject, StringBuilder buffer)
-        {
-            return subject.Subscribe(d => { buffer.AppendLine($"OnNext: {d.Foo} {d.Bar}"); },
-                error => { buffer.AppendLine($"OnError: {error.Message}"); },
-                () => buffer.AppendLine("OnCompleted"));
-        }
-
-        private void OnCompleted()
-        {
-            redisRx.OnCompleted();
-            rx.OnCompleted();
-        }
-
-        private void OnNext(Data data)
-        {
-            redisRx.OnNext(data);
-            rx.OnNext(data);
-        }
-
-        private void OnError(Exception exn)
-        {
-            redisRx.OnError(exn);
-            rx.OnError(exn);
-        }
-
-        private void AssertBuilders(StringBuilder expected, StringBuilder actual)
-        {
-            var i = 2;
-            while (--i >= 0)
-            {
-                try
-                {
-                    Assert.Equal(expected.ToString(), actual.ToString());
-                    return;
-                }
-                catch (Exception)
-                {
-                    Thread.Sleep(100);
-                }
-            }
-
-            Assert.Equal(expected.ToString(), actual.ToString());
-        }
-
+        
         [Fact]
         public void Subscribe_after_completed_should_behave_like_rx()
         {
@@ -94,7 +47,7 @@ namespace RxRedis.Tests
         }
 
         [Fact]
-        public void All_values_should_be_received()
+        public void Non_completed_subject_should_not_emit_any_values()
         {
             var rxResult = new StringBuilder();
             var redisResult = new StringBuilder();
@@ -110,7 +63,7 @@ namespace RxRedis.Tests
         }
 
         [Fact]
-        public void All_values_before_completed_should_be_received()
+        public void Last_value_before_completed_should_be_emitted()
         {
             var rxResult = new StringBuilder();
             var redisResult = new StringBuilder();
@@ -127,7 +80,7 @@ namespace RxRedis.Tests
         }
 
         [Fact]
-        public void All_values_before_error_should_be_received()
+        public void No_values_should_be_received_when_error_occured()
         {
             var rxResult = new StringBuilder();
             var redisResult = new StringBuilder();
@@ -143,6 +96,23 @@ namespace RxRedis.Tests
             AssertBuilders(rxResult, redisResult);
         }
 
+        [Fact]
+        public void No_values_should_be_received_when_error_occured_even_if_completed_was_signaled_after()
+        {
+            var rxResult = new StringBuilder();
+            var redisResult = new StringBuilder();
+
+            Subcribe(rx, rxResult);
+            Subcribe(redisRx, redisResult);
+
+            OnNext(new Data("foo", 5));
+            OnNext(new Data("foo 2", 57));
+            OnError(new Exception("test exn"));
+            OnNext(new Data("foo 3", 88885));
+            OnCompleted();
+
+            AssertBuilders(rxResult, redisResult);
+        }
         [Fact]
         public void All_methods_after_first_OnError_should_be_ignored()
         {
@@ -172,6 +142,23 @@ namespace RxRedis.Tests
             OnError(new Exception("test exn"));
             OnError(new Exception("test exn"));
             OnCompleted();
+            OnCompleted();
+            OnCompleted();
+
+            Subcribe(rx, rxResult);
+            Subcribe(redisRx, redisResult);
+
+            AssertBuilders(rxResult, redisResult);
+        }
+
+
+        [Fact]
+        public void Subscribing_to_completed_subject_with_value_should_propagate_this_value()
+        {
+            var rxResult = new StringBuilder();
+            var redisResult = new StringBuilder();
+
+            OnNext(new Data("foo 2", 57));
             OnCompleted();
             OnCompleted();
 
