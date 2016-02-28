@@ -15,6 +15,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PubSubWithSubjects", "examp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AsyncSubjects", "examples\AsyncSubjects\AsyncSubjects.csproj", "{AA0B589F-1DE6-4A37-8E92-EFC7A11D49F3}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TwoWayCommunication", "examples\TwoWayCommunication\TwoWayCommunication.csproj", "{43E3AD3D-7CB9-4814-9350-A0C3BD650A72}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -37,6 +39,10 @@ Global
 		{AA0B589F-1DE6-4A37-8E92-EFC7A11D49F3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AA0B589F-1DE6-4A37-8E92-EFC7A11D49F3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AA0B589F-1DE6-4A37-8E92-EFC7A11D49F3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{43E3AD3D-7CB9-4814-9350-A0C3BD650A72}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{43E3AD3D-7CB9-4814-9350-A0C3BD650A72}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{43E3AD3D-7CB9-4814-9350-A0C3BD650A72}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{43E3AD3D-7CB9-4814-9350-A0C3BD650A72}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -44,5 +50,6 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{1977C1DB-2A58-4008-8367-6DE691716193} = {AC4161AA-701D-4075-A6F6-781FF5A5E492}
 		{AA0B589F-1DE6-4A37-8E92-EFC7A11D49F3} = {AC4161AA-701D-4075-A6F6-781FF5A5E492}
+		{43E3AD3D-7CB9-4814-9350-A0C3BD650A72} = {AC4161AA-701D-4075-A6F6-781FF5A5E492}
 	EndGlobalSection
 EndGlobal
