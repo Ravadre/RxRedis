@@ -17,26 +17,33 @@ namespace AsyncSubjects
         {
             var complete = new ManualResetEventSlim();
             var pub = new Publisher(complete);
-            var sub1 = new Subscriber();
-            var sub2 = new Subscriber();
+            var preSub = new Subscriber("Pre complete subscriber");
+            var postSub = new Subscriber("Post complete subscriber");
 
-            sub1.Run();
+            preSub.Run();
             pub.Run();
-            sub2.Run();
+           
 
             Console.WriteLine("Press enter to mark stream completed");
             Console.ReadLine();
             complete.Set();
+            Thread.Sleep(1000);
+            Console.WriteLine();
+            Console.WriteLine("Press enter to subscribe with another subscriber");
+            Console.ReadLine();
+            postSub.Run();
             Console.ReadLine();
         }
     }
 
     class Subscriber
     {
+        private readonly string name;
         private readonly IObservable<long> obs;
 
-        public Subscriber()
+        public Subscriber(string name)
         {
+            this.name = name;
             var redis = ConnectionMultiplexer.Connect("localhost");
             obs = RedisObservable.Create<long>("async", redis);
         }
@@ -45,10 +52,10 @@ namespace AsyncSubjects
         {
             obs.Subscribe(idx =>
             {
-                Console.WriteLine("Subscriber notified with idx: " + idx);
+                Console.WriteLine(name + " notified with idx: " + idx);
             }, () =>
             {
-                Console.WriteLine("Subscriber completed");
+                Console.WriteLine(name + " completed");
             });
         }
     }
