@@ -1,18 +1,68 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Reactive.Subjects;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using StackExchange.Redis;
 using Xunit;
 
 namespace RxRedis.Tests
 {
-    public class RedisSubjectTests : SubjectTestsCommons
+    public class RedisAsyncSubjectTests
     {
-        public RedisSubjectTests()
+        private readonly RedisAsyncSubject<Data> redisRx;
+        private readonly AsyncSubject<Data> rx;
+
+        public RedisAsyncSubjectTests()
         {
-            rx = new Subject<Data>();
-            redisRx = new RedisSubject<Data>("redis-subject-tests", ConnectionMultiplexer.Connect("localhost"));
+            rx = new AsyncSubject<Data>();
+            redisRx = new RedisAsyncSubject<Data>("redis-subject-tests", ConnectionMultiplexer.Connect("localhost"));
+        }
+
+        private IDisposable Subcribe(ISubject<Data> subject, StringBuilder buffer)
+        {
+            return subject.Subscribe(d => { buffer.AppendLine($"OnNext: {d.Foo} {d.Bar}"); },
+                error => { buffer.AppendLine($"OnError: {error.Message}"); },
+                () => buffer.AppendLine("OnCompleted"));
+        }
+
+        private void OnCompleted()
+        {
+            redisRx.OnCompleted();
+            rx.OnCompleted();
+        }
+
+        private void OnNext(Data data)
+        {
+            redisRx.OnNext(data);
+            rx.OnNext(data);
+        }
+
+        private void OnError(Exception exn)
+        {
+            redisRx.OnError(exn);
+            rx.OnError(exn);
+        }
+
+        private void AssertBuilders(StringBuilder expected, StringBuilder actual)
+        {
+            var i = 2;
+            while (--i >= 0)
+            {
+                try
+                {
+                    Assert.Equal(expected.ToString(), actual.ToString());
+                    return;
+                }
+                catch (Exception)
+                {
+                    Thread.Sleep(100);
+                }
+            }
+
+            Assert.Equal(expected.ToString(), actual.ToString());
         }
 
         [Fact]
