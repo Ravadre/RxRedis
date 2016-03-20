@@ -32,7 +32,7 @@ Subjects
 One way of generating streams of events in ReactiveX are implementations of `ISubject<T>`.
 They can be exposed to observers through `IObservable<T>` interface, i.e.:
 
-```CSharp
+```cs
 private readonly Subject<EventData> eventsSubject;
 public IObservable<EventData> Events => eventsSubject.AsObservable();
 
@@ -61,7 +61,7 @@ i.e. using `AsyncSubject<T>` will publish only the last event and only after the
 
 RxRedis offers drop-in replacements for subjects. To use RxRedis's subjects just change constructor call:
 
-```CSharp
+```cs
 var redis = ConnectionMultiplexer.Connect("localhost");
 var subject = new RedisSubject<EventData>("subjectName", redis);
 ```
@@ -81,7 +81,7 @@ Once created, subject can be used as an observable inside a process, however, al
 
 To observe those events from any other processes you can create an instance of the second biggest building block of RxRedis - `RedisObservable<T>`.
 
-```CSharp
+```cs
 IObservable<EventData> observable = RedisObservable.Create<EventData>("subjectName", redis);
 var sub = observable.Subscribe(...);
 ```
