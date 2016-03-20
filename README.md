@@ -1,3 +1,5 @@
+[![NuGet](https://img.shields.io/nuget/v/Nuget.Core.svg)](https://www.nuget.org/packages/RxRedis)
+
 # RxRedis
 
 RxRedis is a .Net library that implements [ReactiveX](http://reactivex.io/) 
