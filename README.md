@@ -1,4 +1,4 @@
-[![NuGet](https://img.shields.io/nuget/v/Nuget.Core.svg)](https://www.nuget.org/packages/RxRedis)
+[![NuGet](https://img.shields.io/nuget/v/RxRedis.svg)](https://www.nuget.org/packages/RxRedis)
 
 # RxRedis
 
