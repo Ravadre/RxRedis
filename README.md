@@ -1,16 +1,16 @@
 # RxRedis
 
-RxRedis is a library that implements [ReactiveX](http://reactivex.io/) 
-patterns with [Redis](http://redis.io/) as a transport layer on .Net.
+RxRedis is a .Net library that implements [ReactiveX](http://reactivex.io/) 
+patterns using [Redis](http://redis.io/) as a transport layer.
 
-Goals
+Features
 =====
 
-The main goal is to allow event streams to send data between processes 
-using Redis as a broker while making sure that the behavior is as close
-as possible to already known concepts.
-Secondly, RxRedis should leverage composability and implement only basic blocks
-while making sure that existing operators will work as expected.
+* Ability to use composable event streams and operators from Rx.Net between processes
+* Uses Redis as a broker for message passing
+* New subjects / observables can be used with Rx.Net operators seamlessly
+* Support for different subject types behaviors over the wire.  
+
 
 Installation
 ============
@@ -52,8 +52,8 @@ private void Process()
     
 ``` 
 
-Note, that changing type of `Subject<T>` can change behavior of published observable stream,
-i.e. using `AsyncSubject<T>` will publish only last event and only after stream is marked completed.
+Note, that changing type of `Subject<T>` can change behavior of the published observable stream,
+i.e. using `AsyncSubject<T>` will publish only the last event and only after the stream is marked completed.
 
 ### RxRedis
 
@@ -64,21 +64,20 @@ var redis = ConnectionMultiplexer.Connect("localhost");
 var subject = new RedisSubject<EventData>("subjectName", redis);
 ```
 
-`RedisSubject<T>` requires two parameters: `subjectName: string` and `redisConnection: IConnectionMultiplexer`. 
+`RedisSubject<T>` requires two additional parameters: `subjectName: string` and `redisConnection: IConnectionMultiplexer`. 
 
 Name is used to uniquely identify each subject. 
-It can be used to later connect to created subject from different processes. 
-Note, that no 2 subjects should share the same name, 
-otherwise there can be conflicts, this is even more true for different types of subjects like `AsyncSubject<T>`.
+It can be later used to connect to a subject from different processes. 
+Note, no 2 subjects should share the same name, otherwise there can be conflicts; this is even more true for different types of subjects like `AsyncSubject<T>`.
 
-Redis connection is interface that will be used by subject to communicate with redis. Currently, RxRedis depends on [StackExchange.Redis](https://github.com/StackExchange/StackExchange.Redis).
+Redis connection is an interface that will be used by a subject to communicate with redis.
 
 Observables
 ---
 
 Once created, subject can be used as an observable inside a process, however, all emitted events will go through Redis cluster, instead of being passed in memory.
 
-To observe those events from any other processes you can create an instance of second biggest building block of RxRedis - `RedisObservable<T>`.
+To observe those events from any other processes you can create an instance of the second biggest building block of RxRedis - `RedisObservable<T>`.
 
 ```CSharp
 IObservable<EventData> observable = RedisObservable.Create<EventData>("subjectName", redis);
@@ -88,13 +87,13 @@ var sub = observable.Subscribe(...);
 Once created, observable can be composed using Rx.NET operators.
 
 Observables respect publishing subject's type, so ie. if publisher is of type `RedisSubject<T>`, old events won't be observed, however, if publisher is `RedisAsyncSubject<T>`,
-all connected observables will see only last event and only if subject is marked completed.
+all connected observables will see only last event and only if subject is marked completed. You can consult [ReactiveX docs](http://reactivex.io/documentation/subject.html) to check the behavior.
 
 
 Serialization
 -------------
 
-Internally, all events are serialized to JSON format using Jil. 
+Internally, all events are serialized to JSON format using [Jil](https://github.com/kevin-montrose/Jil).
 Because of this, objects do not have to be marked with special attributes, however, if they are can't be serialized with Jil (ie. because of circular references) - error will be raised in `OnNext` method.
 
 Error handling
