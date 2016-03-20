@@ -96,7 +96,7 @@ Serialization
 -------------
 
 Internally, all events are serialized to JSON format using [Jil](https://github.com/kevin-montrose/Jil).
-Because of this, objects do not have to be marked with special attributes, however, if they are can't be serialized with Jil (ie. because of circular references) - error will be raised in `OnNext` method.
+Because of this, objects do not have to be marked with special attributes, however, if they can't be serialized with Jil (ie. because of circular references) - error will be raised in `OnNext` method.
 
 Error handling
 --------------
