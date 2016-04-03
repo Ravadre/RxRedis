@@ -86,6 +86,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AsyncSubject.Tests.cs" />
+    <Compile Include="BehaviorSubject.Tests.cs" />
     <Compile Include="Data.cs" />
     <Compile Include="Subject.Tests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
