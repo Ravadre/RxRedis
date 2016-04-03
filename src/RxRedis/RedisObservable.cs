@@ -67,14 +67,8 @@ namespace RxRedis
                     {
                         foreach (var o in obs)
                         {
-                            try
-                            {
-                                o.OnNext(msg.Value);
-                            }
-                            catch
-                            {
-                                Unsubscribe(o);
-                            }
+                            try { o.OnNext(msg.Value); }
+                            catch { Unsubscribe(o); }
                         }
                         break;
                     }
@@ -82,15 +76,9 @@ namespace RxRedis
                     {
                         foreach (var o in obs)
                         {
-                            EmitIfPublished(o);
-                            try
-                            {
-                                o.OnCompleted();
-                            }
-                            catch
-                            {
-                                Unsubscribe(o);
-                            }
+                            EmitIfPublished(o, RedisParseState());
+                            try { o.OnCompleted(); }
+                            catch { Unsubscribe(o); }
                         }
                         break;
                     }
@@ -98,14 +86,8 @@ namespace RxRedis
                     {
                         foreach (var o in obs)
                         {
-                            try
-                            {
-                                o.OnError(new Exception(msg.Error));
-                            }
-                            catch
-                            {
-                                Unsubscribe(o);
-                            }
+                            try { o.OnError(new Exception(msg.Error)); }
+                            catch { Unsubscribe(o); }
                         }
                         break;
                     }
@@ -120,9 +102,8 @@ namespace RxRedis
             }
         }
 
-        private void EmitIfPublished(IObserver<T> o)
+        private void EmitIfPublished(IObserver<T> o, ValueState state)
         {
-            var state = RedisParseState();
             if ((state & ValueState.Published) != 0)
             {
                 var val = db.StringGet(RedisKeyValue);
@@ -130,52 +111,32 @@ namespace RxRedis
                 if (val.HasValue)
                 {
                     var msg = JSON.Deserialize<T>(val);
-                    try
-                    {
-                        o.OnNext(msg);
-                    }
-                    catch
-                    {
-                        Unsubscribe(o);
-                    }
+                    try { o.OnNext(msg); }
+                    catch { Unsubscribe(o); }
                 }
             }
         }
 
-        private void EmitIfCompleted(IObserver<T> o)
+        private void EmitIfCompleted(IObserver<T> o, ValueState state)
         {
-            var state = RedisParseState();
             if ((state & ValueState.Completed) != 0)
             {
-                try
-                {
-                    o.OnCompleted();
-                }
-                catch
-                {
-                    Unsubscribe(o);
-                }
+                try { o.OnCompleted(); }
+                catch { Unsubscribe(o); }
             }
         }
 
 
-        private void EmitIfError(IObserver<T> o)
+        private void EmitIfError(IObserver<T> o, ValueState state)
         {
-            var state = RedisParseState();
             if ((state & ValueState.Error) != 0)
             {
                 var val = db.StringGet(RedisKeyValue);
 
                 if (val.HasValue)
                 {
-                    try
-                    {
-                        o.OnError(new Exception(val));
-                    }
-                    catch
-                    {
-                        Unsubscribe(o);
-                    }
+                    try { o.OnError(new Exception(val)); }
+                    catch { Unsubscribe(o); }
                 }
             }
         }
@@ -190,9 +151,10 @@ namespace RxRedis
             {
                 CheckDisposed();
 
-                EmitIfPublished(observer);
-                EmitIfCompleted(observer);
-                EmitIfError(observer);
+                var state = RedisParseState();
+                EmitIfPublished(observer, state);
+                EmitIfCompleted(observer, state);
+                EmitIfError(observer, state);
 
                 if (!isStopped)
                 {
