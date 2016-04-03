@@ -2,6 +2,7 @@
 <package >
   <metadata>
     <id>RxRedis</id>
+    <title>RxRedis</title>
     <version>$version$</version>
     <authors>$author$</authors>
     <owners>$author$</owners>
